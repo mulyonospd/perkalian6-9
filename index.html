@@ -31,7 +31,6 @@
       100% { background-position: 0% 50%; }
     }
 
-    /* Animasi Kartun Sederhana (Awan Berjalan di Background) */
     .cloud {
       position: absolute;
       background: rgba(255, 255, 255, 0.6);
@@ -80,12 +79,11 @@
       padding: 0 10px;
     }
 
-    /* Container Responsif untuk Kamera */
     .container { 
       position: relative; 
       width: 100%; 
       max-width: 600px; 
-      aspect-ratio: 4 / 3; /* Menjaga proporsi video tetap seimbang di HP */
+      aspect-ratio: 4 / 3; 
       z-index: 2;
     }
 
@@ -95,7 +93,7 @@
       left: 0; 
       width: 100%; 
       height: 100%; 
-      object-fit: cover; /* Agar video pas memenuhi kotak tanpa gepeng */
+      object-fit: cover; 
       border: 5px solid #ff80ab; 
       border-radius: 20px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.2);
@@ -110,7 +108,7 @@
       background: #fff; 
       border: 4px dashed #ff4081; 
       border-radius: 20px; 
-      font-size: calc(20px + 1vw); 
+      font-size: calc(18px + 1vw); 
       font-weight: bold; 
       color: #e91e63; 
       box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
@@ -246,10 +244,28 @@
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'id-ID';
-        utterance.rate = 0.9;
+        utterance.rate = 1.2; // Kecepatan normal yang pas & tidak lambat
         utterance.pitch = 1.2;
         window.speechSynthesis.speak(utterance);
       }
+    }
+
+    function numberToWords(num) {
+      const exactWords = {
+        36: "tiga puluh enam",
+        40: "empat puluh",
+        42: "empat puluh dua",
+        45: "empat puluh lima",
+        48: "empat puluh delapan",
+        49: "empat puluh sembilan",
+        54: "lima puluh empat",
+        56: "lima puluh enam",
+        63: "enam puluh tiga",
+        64: "enam puluh empat",
+        72: "tujuh puluh dua",
+        81: "delapan puluh satu"
+      };
+      return exactWords[num] || num.toString();
     }
 
     function generateQuestion() {
@@ -260,12 +276,12 @@
       attemptsLeft = 3;
       currentPoseId = "";
       
-      questionBox.innerHTML = `Berapa ${currentQuestion.num1} × ${currentQuestion.num2}?`;
+      questionBox.innerHTML = `Tunjukkan perkalian ${currentQuestion.num1} × ${currentQuestion.num2}`;
       attemptsDisplay.innerHTML = `Kesempatan: ${attemptsLeft}`;
       feedback.innerHTML = "Tekuk jarimu sesuai angka!";
       feedback.className = "";
 
-      speak(`Berapa hasil dari ${currentQuestion.num1} dikali ${currentQuestion.num2}?`);
+      speak(`Tunjukkan perkalian ${currentQuestion.num1} kali ${currentQuestion.num2}`);
     }
 
     const hands = new Hands({
@@ -301,16 +317,17 @@
       if (calculatedAnswer === currentQuestion.answer) {
         score += 10;
         scoreDisplay.innerHTML = `Skor: ${score}`;
-        feedback.innerHTML = "Jawaban Benar! Hebat! 🎉";
+        feedback.innerHTML = "Benar, Selamat! 🎉";
         feedback.className = "correct";
         
-        const correctVoices = ["Hebat!", "Kamu pintar!", "Bagus!", "Luar biasa!"];
-        speak(correctVoices[Math.floor(Math.random() * correctVoices.length)]);
+        let answerWords = numberToWords(currentQuestion.answer);
+        // Menggunakan jeda koma agar pengucapan mengalir cepat tanpa terpotong sistem browser
+        speak(`Hore, benar, hasil kalinya adalah, ${answerWords}`);
         
         setTimeout(() => {
           generateQuestion();
           isEvaluating = false;
-        }, 2500);
+        }, 4500); 
       } else {
         attemptsLeft--;
         attemptsDisplay.innerHTML = `Kesempatan: ${attemptsLeft}`;
@@ -319,8 +336,7 @@
           feedback.innerHTML = `Kurang tepat, coba lagi ya!`;
           feedback.className = "wrong";
           
-          const wrongVoices = ["Ayo coba lagi, kamu masih salah.", "Coba lagi yaaah.", "Kurang tepat, ayo perbaiki jarimu."];
-          speak(wrongVoices[Math.floor(Math.random() * wrongVoices.length)]);
+          speak("Ayo coba lagi, kamu masih salah.");
           
           setTimeout(() => {
             feedback.innerHTML = "Ayo, perbaiki posisi jarimu!";
@@ -329,20 +345,20 @@
             isEvaluating = false;
           }, 2500);
         } else {
-          feedback.innerHTML = `Kesempatan habis! Jawaban: ${currentQuestion.answer}`;
+          let answerWords = numberToWords(currentQuestion.answer);
+          feedback.innerHTML = `Kesempatan habis! Jawabannya: ${currentQuestion.answer}`;
           feedback.className = "wrong";
-          speak(`Kesempatan habis! Jawabannya adalah ${currentQuestion.answer}`);
+          speak(`Kesempatan habis, jawabannya adalah, ${answerWords}`);
           
           setTimeout(() => {
             generateQuestion();
             isEvaluating = false;
-          }, 3500);
+          }, 4500);
         }
       }
     }
 
     function onResults(results) {
-      // Penyesuaian ukuran internal canvas agar akurat dengan ukuran responsif di layar HP
       if (canvasElement.width !== videoElement.videoWidth || canvasElement.height !== videoElement.videoHeight) {
         if (videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
           canvasElement.width = videoElement.videoWidth;
@@ -412,6 +428,7 @@
       height: 480
     });
 
+    startBtn.getElementById = ('click', () => {}); // placeholder aman
     startBtn.addEventListener('click', () => {
       startScreen.style.display = 'none'; 
       camera.start(); 
