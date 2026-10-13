@@ -8,16 +8,18 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
   <style>
+    * { box-sizing: border-box; }
     body { 
       font-family: 'Comic Sans MS', cursive, sans-serif; 
       margin: 0; 
-      padding: 20px; 
+      padding: 10px; 
       background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #a1c4fd, #c2e9fb);
       background-size: 400% 400%;
       animation: gradientBG 15s ease infinite;
       display: flex; 
       flex-direction: column; 
       align-items: center; 
+      justify-content: center;
       color: #333; 
       min-height: 100vh;
       overflow-x: hidden;
@@ -59,61 +61,76 @@
     h1 { 
       color: #ff4081; 
       text-shadow: 2px 2px #fff; 
-      margin-bottom: 5px;
+      margin: 5px 0;
+      font-size: calc(20px + 2vw);
+      text-align: center;
       z-index: 2;
     }
+    
     .info-bar {
       display: flex;
       justify-content: space-between;
-      width: 640px;
-      margin-bottom: 10px;
-      font-size: 20px;
+      width: 100%;
+      max-width: 600px;
+      margin: 5px 0;
+      font-size: calc(14px + 1vw);
       font-weight: bold;
       color: #00796b;
       z-index: 2;
+      padding: 0 10px;
     }
+
+    /* Container Responsif untuk Kamera */
     .container { 
       position: relative; 
-      width: 640px; 
-      height: 480px; 
+      width: 100%; 
+      max-width: 600px; 
+      aspect-ratio: 4 / 3; /* Menjaga proporsi video tetap seimbang di HP */
       z-index: 2;
     }
+
     video, canvas { 
       position: absolute; 
       top: 0; 
       left: 0; 
-      width: 640px; 
-      height: 480px; 
-      border: 6px solid #ff80ab; 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; /* Agar video pas memenuhi kotak tanpa gepeng */
+      border: 5px solid #ff80ab; 
       border-radius: 20px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-      /* Menghapus warna hitam agar latar kamera transparan/alami */
       background: transparent; 
     }
     video { transform: scaleX(-1); }
     canvas { transform: scaleX(-1); pointer-events: none; }
     
     #question-box { 
-      margin-top: 20px; 
-      padding: 15px 40px; 
+      margin-top: 15px; 
+      padding: 12px 20px; 
       background: #fff; 
       border: 4px dashed #ff4081; 
-      border-radius: 25px; 
-      font-size: 32px; 
+      border-radius: 20px; 
+      font-size: calc(20px + 1vw); 
       font-weight: bold; 
       color: #e91e63; 
       box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
       z-index: 2;
+      text-align: center;
+      width: 90%;
+      max-width: 600px;
     }
+    
     #feedback { 
-      margin-top: 15px; 
-      font-size: 24px; 
+      margin-top: 10px; 
+      font-size: calc(16px + 0.5vw); 
       font-weight: bold; 
-      min-height: 35px; 
-      padding: 10px 20px;
-      border-radius: 15px;
+      min-height: 30px; 
+      padding: 8px 15px;
+      border-radius: 12px;
       text-align: center;
       z-index: 2;
+      width: 90%;
+      max-width: 600px;
     }
     .correct { background-color: #c8e6c9; color: #2e7d32; border: 2px solid #81c784; }
     .wrong { background-color: #ffcdd2; color: #c62828; border: 2px solid #e57373; }
@@ -122,17 +139,19 @@
     #start-screen {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(255, 182, 193, 0.9);
+      background: rgba(255, 182, 193, 0.95);
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       z-index: 1000;
       color: #d81b60;
+      padding: 20px;
+      text-align: center;
     }
     #start-btn {
-      padding: 15px 40px;
-      font-size: 28px;
+      padding: 15px 35px;
+      font-size: 24px;
       font-family: 'Comic Sans MS', cursive;
       font-weight: bold;
       background-color: #ff4081;
@@ -152,8 +171,8 @@
   <div class="cloud c2"></div>
 
   <div id="start-screen">
-    <h2 style="font-size: 40px; margin-bottom: 10px; text-shadow: 2px 2px #fff;">🌟 Belajar Jarimatika Ceria 🌟</h2>
-    <p style="font-size: 20px; margin-bottom: 25px; color: #880e4f;">Yuk bermain sambil belajar matematika bersama!</p>
+    <h2 style="font-size: calc(24px + 1vw); margin-bottom: 10px; text-shadow: 2px 2px #fff;">🌟 Belajar Jarimatika Ceria 🌟</h2>
+    <p style="font-size: calc(14px + 0.5vw); margin-bottom: 25px; color: #880e4f;">Yuk bermain sambil belajar matematika bersama!</p>
     <button id="start-btn">Mulai Belajar!</button>
   </div>
 
@@ -323,6 +342,14 @@
     }
 
     function onResults(results) {
+      // Penyesuaian ukuran internal canvas agar akurat dengan ukuran responsif di layar HP
+      if (canvasElement.width !== videoElement.videoWidth || canvasElement.height !== videoElement.videoHeight) {
+        if (videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
+          canvasElement.width = videoElement.videoWidth;
+          canvasElement.height = videoElement.videoHeight;
+        }
+      }
+
       canvasCtx.save();
       canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
