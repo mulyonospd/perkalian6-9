@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Belajar Jarimatika Ceria</title>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  <style>
+    body { 
+      font-family: 'Comic Sans MS', cursive, sans-serif; 
+      margin: 0; 
+      padding: 20px; 
+      background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #a1c4fd, #c2e9fb);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      color: #333; 
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Animasi Kartun Sederhana (Awan Berjalan di Background) */
+    .cloud {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 50px;
+      animation: floatCloud linear infinite;
+      z-index: -1;
+    }
+    .cloud::before, .cloud::after {
+      content: '';
+      position: absolute;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 50%;
+    }
+    .c1 { width: 100px; height: 40px; top: 10%; left: -150px; animation-duration: 25s; }
+    .c1::before { width: 50px; height: 50px; top: -25px; left: 15px; }
+    .c1::after { width: 60px; height: 60px; top: -35px; left: 45px; }
+
+    .c2 { width: 140px; height: 50px; top: 60%; left: -200px; animation-duration: 35s; animation-delay: 5s; }
+    .c2::before { width: 60px; height: 60px; top: -30px; left: 20px; }
+    .c2::after { width: 70px; height: 70px; top: -40px; left: 60px; }
+
+    @keyframes floatCloud {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(calc(100vw + 300px)); }
+    }
+
+    h1 { 
+      color: #ff4081; 
+      text-shadow: 2px 2px #fff; 
+      margin-bottom: 5px;
+      z-index: 2;
+    }
+    .info-bar {
+      display: flex;
+      justify-content: space-between;
+      width: 640px;
+      margin-bottom: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #00796b;
+      z-index: 2;
+    }
+    .container { 
+      position: relative; 
+      width: 640px; 
+      height: 480px; 
+      z-index: 2;
+    }
+    video, canvas { 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      width: 640px; 
+      height: 480px; 
+      border: 6px solid #ff80ab; 
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      /* Menghapus warna hitam agar latar kamera transparan/alami */
+      background: transparent; 
+    }
+    video { transform: scaleX(-1); }
+    canvas { transform: scaleX(-1); pointer-events: none; }
+    
+    #question-box { 
+      margin-top: 20px; 
+      padding: 15px 40px; 
+      background: #fff; 
+      border: 4px dashed #ff4081; 
+      border-radius: 25px; 
+      font-size: 32px; 
+      font-weight: bold; 
+      color: #e91e63; 
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
+      z-index: 2;
+    }
+    #feedback { 
+      margin-top: 15px; 
+      font-size: 24px; 
+      font-weight: bold; 
+      min-height: 35px; 
+      padding: 10px 20px;
+      border-radius: 15px;
+      text-align: center;
+      z-index: 2;
+    }
+    .correct { background-color: #c8e6c9; color: #2e7d32; border: 2px solid #81c784; }
+    .wrong { background-color: #ffcdd2; color: #c62828; border: 2px solid #e57373; }
+    .waiting { background-color: #ffe0b2; color: #ef6c00; }
+    
+    #start-screen {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255, 182, 193, 0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      color: #d81b60;
+    }
+    #start-btn {
+      padding: 15px 40px;
+      font-size: 28px;
+      font-family: 'Comic Sans MS', cursive;
+      font-weight: bold;
+      background-color: #ff4081;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(255, 64, 129, 0.4);
+      transition: transform 0.2s;
+    }
+    #start-btn:hover { transform: scale(1.1); }
+  </style>
+</head>
+<body>
+
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+
+  <div id="start-screen">
+    <h2 style="font-size: 40px; margin-bottom: 10px; text-shadow: 2px 2px #fff;">🌟 Belajar Jarimatika Ceria 🌟</h2>
+    <p style="font-size: 20px; margin-bottom: 25px; color: #880e4f;">Yuk bermain sambil belajar matematika bersama!</p>
+    <button id="start-btn">Mulai Belajar!</button>
+  </div>
+
+  <h1>Belajar Jarimatika</h1>
+  <div class="info-bar">
+    <div id="score-display">Skor: 0</div>
+    <div id="attempts-display">Kesempatan: 3</div>
+  </div>
+  
+  <div class="container">
+    <video id="webcam" autoplay playsinline></video>
+    <canvas id="output_canvas"></canvas>
+  </div>
+  
+  <div id="question-box">Memuat...</div>
+  <div id="feedback">Tunggu sebentar, menyalakan kamera...</div>
+
+  <script>
+    const videoElement = document.getElementById('webcam');
+    const canvasElement = document.getElementById('output_canvas');
+    const canvasCtx = canvasElement.getContext('2d');
+    
+    const questionBox = document.getElementById('question-box');
+    const feedback = document.getElementById('feedback');
+    const attemptsDisplay = document.getElementById('attempts-display');
+    const scoreDisplay = document.getElementById('score-display');
+    const startScreen = document.getElementById('start-screen');
+    const startBtn = document.getElementById('start-btn');
+
+    let currentQuestion = { num1: 0, num2: 0, answer: 0 };
+    let attemptsLeft = 3;
+    let score = 0;
+    
+    let currentPoseId = "";
+    let poseStartTime = 0;
+    let isEvaluating = false;
+
+    let audioCtx = null;
+    let musicInterval = null;
+
+    function startBackgroundMusic() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      const notes = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50]; 
+      
+      musicInterval = setInterval(() => {
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        let osc = audioCtx.createOscillator();
+        let gainNode = audioCtx.createGain();
+
+        let randomNote = notes[Math.floor(Math.random() * notes.length)];
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(randomNote, audioCtx.currentTime);
+
+        gainNode.gain.setValueAtTime(0.03, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.5);
+
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 1.5);
+      }, 800);
+    }
+
+    function speak(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'id-ID';
+        utterance.rate = 0.9;
+        utterance.pitch = 1.2;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function generateQuestion() {
+      currentQuestion.num1 = Math.floor(Math.random() * 4) + 6; 
+      currentQuestion.num2 = Math.floor(Math.random() * 4) + 6; 
+      currentQuestion.answer = currentQuestion.num1 * currentQuestion.num2;
+      
+      attemptsLeft = 3;
+      currentPoseId = "";
+      
+      questionBox.innerHTML = `Berapa ${currentQuestion.num1} × ${currentQuestion.num2}?`;
+      attemptsDisplay.innerHTML = `Kesempatan: ${attemptsLeft}`;
+      feedback.innerHTML = "Tekuk jarimu sesuai angka!";
+      feedback.className = "";
+
+      speak(`Berapa hasil dari ${currentQuestion.num1} dikali ${currentQuestion.num2}?`);
+    }
+
+    const hands = new Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+
+    hands.setOptions({
+      maxNumHands: 2,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.6,
+      minTrackingConfidence: 0.6
+    });
+
+    hands.onResults(onResults);
+
+    function getDistance(p1, p2) {
+      return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+    }
+
+    function countOpenFingers(landmarks) {
+      let count = 0;
+      if (getDistance(landmarks[4], landmarks[17]) > getDistance(landmarks[2], landmarks[17])) count++;
+      if (landmarks[8].y < landmarks[6].y) count++;
+      if (landmarks[12].y < landmarks[10].y) count++;
+      if (landmarks[16].y < landmarks[14].y) count++;
+      if (landmarks[20].y < landmarks[18].y) count++;
+      return count;
+    }
+
+    function checkAnswer(calculatedAnswer) {
+      isEvaluating = true;
+      
+      if (calculatedAnswer === currentQuestion.answer) {
+        score += 10;
+        scoreDisplay.innerHTML = `Skor: ${score}`;
+        feedback.innerHTML = "Jawaban Benar! Hebat! 🎉";
+        feedback.className = "correct";
+        
+        const correctVoices = ["Hebat!", "Kamu pintar!", "Bagus!", "Luar biasa!"];
+        speak(correctVoices[Math.floor(Math.random() * correctVoices.length)]);
+        
+        setTimeout(() => {
+          generateQuestion();
+          isEvaluating = false;
+        }, 2500);
+      } else {
+        attemptsLeft--;
+        attemptsDisplay.innerHTML = `Kesempatan: ${attemptsLeft}`;
+        
+        if (attemptsLeft > 0) {
+          feedback.innerHTML = `Kurang tepat, coba lagi ya!`;
+          feedback.className = "wrong";
+          
+          const wrongVoices = ["Ayo coba lagi, kamu masih salah.", "Coba lagi yaaah.", "Kurang tepat, ayo perbaiki jarimu."];
+          speak(wrongVoices[Math.floor(Math.random() * wrongVoices.length)]);
+          
+          setTimeout(() => {
+            feedback.innerHTML = "Ayo, perbaiki posisi jarimu!";
+            feedback.className = "";
+            currentPoseId = ""; 
+            isEvaluating = false;
+          }, 2500);
+        } else {
+          feedback.innerHTML = `Kesempatan habis! Jawaban: ${currentQuestion.answer}`;
+          feedback.className = "wrong";
+          speak(`Kesempatan habis! Jawabannya adalah ${currentQuestion.answer}`);
+          
+          setTimeout(() => {
+            generateQuestion();
+            isEvaluating = false;
+          }, 3500);
+        }
+      }
+    }
+
+    function onResults(results) {
+      canvasCtx.save();
+      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+      if (results.multiHandLandmarks && results.multiHandedness) {
+        let openHand1 = 0;
+        let openHand2 = 0;
+        let handsDetected = results.multiHandLandmarks.length;
+
+        for (let index = 0; index < handsDetected; index++) {
+          const landmarks = results.multiHandLandmarks[index];
+          
+          drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#00e676', lineWidth: 4 });
+          drawLandmarks(canvasCtx, landmarks, { color: '#ffea00', lineWidth: 2, radius: 5 });
+
+          if (index === 0) openHand1 = countOpenFingers(landmarks);
+          if (index === 1) openHand2 = countOpenFingers(landmarks);
+        }
+
+        if (!isEvaluating) {
+          if (handsDetected === 2 && openHand1 >= 1 && openHand1 <= 4 && openHand2 >= 1 && openHand2 <= 4) {
+            let closedHand1 = 5 - openHand1; 
+            let closedHand2 = 5 - openHand2; 
+            
+            let poseId = `${closedHand1}-${closedHand2}`; 
+            let calculatedAnswer = ((closedHand1 + closedHand2) * 10) + (openHand1 * openHand2);
+
+            if (poseId === currentPoseId) {
+              if (Date.now() - poseStartTime > 1500) {
+                checkAnswer(calculatedAnswer);
+              } else {
+                feedback.innerHTML = "⏳ Tahan posisimu sebentar...";
+                feedback.className = "waiting";
+              }
+            } else {
+              currentPoseId = poseId;
+              poseStartTime = Date.now();
+            }
+          } else {
+            currentPoseId = "";
+            feedback.innerHTML = "Tekuk jari (1-4 jari) per tangan";
+            feedback.className = "";
+          }
+        }
+      } else {
+        if (!isEvaluating) {
+          currentPoseId = "";
+          feedback.innerHTML = "Tunjukkan kedua tanganmu ke kamera!";
+          feedback.className = "";
+        }
+      }
+
+      canvasCtx.restore();
+    }
+
+    const camera = new Camera(videoElement, {
+      onFrame: async () => {
+        await hands.send({ image: videoElement });
+      },
+      width: 640,
+      height: 480
+    });
+
+    startBtn.addEventListener('click', () => {
+      startScreen.style.display = 'none'; 
+      camera.start(); 
+      startBackgroundMusic(); 
+      generateQuestion(); 
+    });
+
+  </script>
+</body>
+</html>
